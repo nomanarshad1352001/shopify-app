@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@shopify/polaris/build/esm/styles.css";
@@ -5,6 +6,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Navigation } from "@/components/Navigation";
 import Script from "next/script";
+import React from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,8 +24,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
-}: Readonly<{
+                                     children,
+                                   }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
@@ -31,16 +33,24 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <meta name="shopify-api-key" content={process.env.NEXT_PUBLIC_SHOPIFY_API_KEY || ""} />
-        <Script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" strategy="beforeInteractive" />
-      </head>
-      <body className="min-h-full flex flex-col">
-        <Providers>
-          <Navigation />
-          {children}
-        </Providers>
-      </body>
+    <head>
+      <meta
+        name="shopify-api-key"
+        content={process.env.NEXT_PUBLIC_SHOPIFY_API_KEY || ""}
+      />
+      {/* This CDN script is REQUIRED for App Bridge v4 */}
+      <Script
+        src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
+        strategy="beforeInteractive"
+      />
+      <title>Shopify Embedded App</title>
+    </head>
+    <body className="min-h-full flex flex-col">
+    <Providers>
+      <Navigation />
+      {children}
+    </Providers>
+    </body>
     </html>
   );
 }

@@ -1,16 +1,55 @@
+// components/Navigation.tsx
 'use client';
 
-import { useEffect, createElement } from 'react';
+import { useEffect } from 'react';
+
+declare global {
+  interface Window {
+    shopify: any;
+  }
+}
 
 export function Navigation() {
   useEffect(() => {
-    // We only want this once. App Bridge handles `<ui-nav-menu>` automatically.
-    // If you define `<ui-nav-menu>` anywhere, App Bridge will pick it up and render it in Shopify admin
+    // Initialize navigation menu for Shopify admin sidebar
+    const initNavigation = () => {
+      if (typeof window !== 'undefined' && window.shopify) {
+        try {
+          // For App Bridge v4, navigation is handled differently
+          // This creates the sidebar menu items
+          const NavigationMenu = window.shopify.createComponent('navigation-menu');
+
+          if (NavigationMenu) {
+            NavigationMenu.addItem({
+              label: 'Dashboard',
+              destination: '/'
+            });
+            NavigationMenu.addItem({
+              label: 'Billing',
+              destination: '/billing'
+            });
+            NavigationMenu.addItem({
+              label: 'Support',
+              destination: '/support'
+            });
+          }
+        } catch (error) {
+          console.error('Failed to initialize navigation:', error);
+        }
+      }
+    };
+
+    // Wait for App Bridge to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initNavigation);
+    } else {
+      initNavigation();
+    }
   }, []);
 
-  return createElement('ui-nav-menu', null, [
-    createElement('a', { href: '/', rel: 'home', key: 'home' }, 'Home'),
-    createElement('a', { href: '/billing', key: 'billing' }, 'Billing'),
-    createElement('a', { href: '/support', key: 'support' }, 'Support')
-  ]);
+  // This component doesn't render anything visible
+  return null;
 }
+
+// Make sure to export it as default if you're using default import
+// Or keep named export and use named import
