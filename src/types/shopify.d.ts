@@ -4,7 +4,7 @@ export {};
 declare global {
   interface Window {
     shopify: {
-      idToken: () => Promise<string>;   // ✅ ADD THIS
+      idToken: () => Promise<string>;
 
       toast: {
         show: (
