@@ -12,20 +12,22 @@ export default function ShopifyProvider({ children, shop, host }: ShopifyProvide
   const [status, setStatus] = useState('Initializing...');
 
   useEffect(() => {
-    if (!window.ShopifyAppBridge) {
+    if (!window.shopify) {
+      console.log("---------------- Shopify App Bridge not loaded ------------------")
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus('❌ Shopify App Bridge not loaded');
       return;
     }
 
     try {
-      const app = window.ShopifyAppBridge.createApp({
-        apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY || '',
+      // ✅ Initialize
+      window.shopify.initialize({
+        apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
         host,
       });
 
-      const Toast = window.ShopifyAppBridge.actions.Toast;
-      const toast = Toast.create(app, { message: 'App Bridge Loaded!', duration: 3000 });
-      toast.dispatch(Toast.Action.SHOW);
+      // ✅ Toast (NEW API)
+      window.shopify.toast.show("App Bridge Loaded 🎉");
 
       setStatus('✅ Shopify App Bridge loaded');
     } catch (err) {
@@ -37,7 +39,7 @@ export default function ShopifyProvider({ children, shop, host }: ShopifyProvide
   return (
     <>
       <div>{status}</div>
-      <div>{shop}</div>
+      <div>{shop} Shop</div>
       {children}
     </>
   );
