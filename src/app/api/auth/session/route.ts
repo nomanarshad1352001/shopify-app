@@ -1,6 +1,5 @@
 // app/api/auth/session/route.ts
 import { NextResponse } from 'next/server';
-import { shopify } from '@/lib/shopify';
 import { loadSession } from '@/lib/simple-session';
 
 export async function GET(request: Request) {
@@ -26,19 +25,30 @@ export async function GET(request: Request) {
       }, { status: 401 });
     }
 
-    // Test the access token - use type assertion to bypass TypeScript
-    const client = new shopify.clients.Rest({
-      session: session as any,  // Type assertion
+    // Make direct API call to Shopify using fetch
+    const response = await fetch(`https://${shop}/admin/api/2024-04/shop.json`, {
+      headers: {
+        'X-Shopify-Access-Token': session.accessToken,
+        'Content-Type': 'application/json',
+      },
     });
 
-    const shopInfo = await client.get({ path: 'shop' });
+    if (!response.ok) {
+      console.error("Shopify API error:", response.status);
+      return NextResponse.json({
+        valid: false,
+        error: 'Invalid access token'
+      }, { status: 401 });
+    }
+
+    const data = await response.json();
 
     return NextResponse.json({
       valid: true,
       shopInfo: {
-        name: shopInfo.body.shop.name,
-        domain: shopInfo.body.shop.domain,
-        email: shopInfo.body.shop.email,
+        name: data.shop.name,
+        domain: data.shop.domain,
+        email: data.shop.email,
       },
     });
   } catch (error) {
