@@ -5,7 +5,6 @@ import "@shopify/polaris/build/esm/styles.css";
 import "./globals.css";
 import { Providers } from "./providers";
 import Navigation from "@/components/Navigation";
-import Script from "next/script";
 import React from "react";
 
 const geistSans = Geist({
@@ -37,11 +36,6 @@ export default function RootLayout({
       <meta
         name="shopify-api-key"
         content={process.env.NEXT_PUBLIC_SHOPIFY_API_KEY || ""}
-      />
-      {/* This CDN script is REQUIRED for App Bridge v4 */}
-      <Script
-        src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
-        strategy="beforeInteractive"
       />
       <title>Shopify Embedded App</title>
     </head>

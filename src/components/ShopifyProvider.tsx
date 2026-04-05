@@ -1,45 +1,48 @@
 'use client';
 
 import { useEffect, useState, ReactNode } from 'react';
+import { createApp } from '@shopify/app-bridge';
+import { Toast } from '@shopify/app-bridge/actions';
 
-interface ShopifyProviderProps {
+interface Props {
   children: ReactNode;
-  shop: string;
   host: string;
 }
 
-export default function ShopifyProvider({ children, shop, host }: ShopifyProviderProps) {
+export default function ShopifyProvider({ children, host }: Props) {
   const [status, setStatus] = useState('Initializing...');
 
   useEffect(() => {
-    if (!window.shopify) {
-      console.log("---------------- Shopify App Bridge not loaded ------------------")
+    console.log(host)
+    if (!host) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStatus('❌ Shopify App Bridge not loaded');
+      setStatus('❌ Missing host param');
       return;
     }
 
     try {
-      // ✅ Initialize
-      window.shopify.initialize({
+      const app = createApp({
         apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
         host,
       });
 
-      // ✅ Toast (NEW API)
-      window.shopify.toast.show("App Bridge Loaded 🎉");
+      const toast = Toast.create(app, {
+        message: 'App Bridge Loaded 🎉',
+        duration: 3000,
+      });
 
-      setStatus('✅ Shopify App Bridge loaded');
+      toast.dispatch(Toast.Action.SHOW);
+
+      setStatus('✅ App Bridge working');
     } catch (err) {
       console.error(err);
-      setStatus('❌ Error initializing App Bridge');
+      setStatus('❌ App Bridge error');
     }
   }, [host]);
 
   return (
     <>
       <div>{status}</div>
-      <div>{shop} Shop</div>
       {children}
     </>
   );
