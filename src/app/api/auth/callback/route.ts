@@ -1,7 +1,7 @@
 // app/api/auth/callback/route.ts
 import { NextResponse } from 'next/server';
 import { shopify } from '@/lib/shopify';
-import { storeSessionInCookies } from '@/lib/session-cookies';
+import { saveSession } from '@/lib/simple-session';
 
 export async function GET(request: Request) {
   try {
@@ -9,8 +9,9 @@ export async function GET(request: Request) {
     const shop = url.searchParams.get("shop");
     const host = url.searchParams.get("host");
 
-    console.log("=== OAuth Callback ===");
+    console.log("=== OAuth Callback Started ===");
     console.log("Shop:", shop);
+    console.log("Host:", host);
 
     if (!shop || !host) {
       return NextResponse.json({ error: "Missing shop or host" }, { status: 400 });
@@ -23,17 +24,17 @@ export async function GET(request: Request) {
 
     const { session } = callbackResponse;
 
-    console.log("Session received, access token:", !!session.accessToken);
+    console.log("Session received - Has access token:", !!session.accessToken);
 
-    // Store session in cookies
-    await storeSessionInCookies(session);
-    console.log("Session stored in cookies");
+    // Save session to our simple store
+    await saveSession(shop, session);
 
-    // Redirect back to app
-    const redirectUrl = new URL(`/?shop=${session.shop}&host=${host}`, url.origin);
+    console.log("Session saved successfully");
+
+    // Redirect back to app with shop and host parameters
+    const redirectUrl = new URL(`/?shop=${shop}&host=${host}`, url.origin);
     const response = NextResponse.redirect(redirectUrl);
 
-    console.log("=== OAuth Complete ===");
     return response;
   } catch (err: any) {
     console.error("OAuth callback failed:", err);

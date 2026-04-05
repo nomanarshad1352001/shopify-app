@@ -1,7 +1,7 @@
 // app/api/auth/session/route.ts
 import { NextResponse } from 'next/server';
 import { shopify } from '@/lib/shopify';
-import { getSessionFromCookies } from '@/lib/session-cookies';
+import { loadSession } from '@/lib/simple-session';
 
 export async function GET(request: Request) {
   try {
@@ -14,43 +14,33 @@ export async function GET(request: Request) {
       return NextResponse.json({ valid: false, error: 'Missing shop' }, { status: 400 });
     }
 
-    // Get session from cookies
-    const session = await getSessionFromCookies();
+    // Load session from our simple store
+    const session = await loadSession(shop);
 
-    console.log("Session from cookies:", !!session);
-    console.log("Session shop matches:", session?.shop === shop);
+    console.log("Session loaded:", !!session);
 
-    if (!session || !session.accessToken || session.shop !== shop) {
+    if (!session || !session.accessToken) {
       return NextResponse.json({
         valid: false,
         error: 'No valid session found'
       }, { status: 401 });
     }
 
-    // Test the access token with Shopify API
-    try {
-      // Use the session directly - it now has the correct structure
-      const client = new shopify.clients.Rest({
-        session: session as any, // Type assertion for now
-      });
+    // Test the access token - use type assertion to bypass TypeScript
+    const client = new shopify.clients.Rest({
+      session: session as any,  // Type assertion
+    });
 
-      const shopInfo = await client.get({ path: 'shop' });
+    const shopInfo = await client.get({ path: 'shop' });
 
-      return NextResponse.json({
-        valid: true,
-        shopInfo: {
-          name: shopInfo.body.shop.name,
-          domain: shopInfo.body.shop.domain,
-          email: shopInfo.body.shop.email,
-        },
-      });
-    } catch (apiError: any) {
-      console.error("API call failed:", apiError.message);
-      return NextResponse.json({
-        valid: false,
-        error: 'API call failed - session may be expired'
-      }, { status: 401 });
-    }
+    return NextResponse.json({
+      valid: true,
+      shopInfo: {
+        name: shopInfo.body.shop.name,
+        domain: shopInfo.body.shop.domain,
+        email: shopInfo.body.shop.email,
+      },
+    });
   } catch (error) {
     console.error('Session validation error:', error);
     return NextResponse.json({ valid: false, error: 'Internal error' }, { status: 500 });
