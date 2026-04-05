@@ -1,0 +1,3 @@
+src/components/Navigation.tsx(12,5): error TS2339: Property 'ui-nav-menu' does not exist on type 'JSX.IntrinsicElements'.
+src/components/Navigation.tsx(16,5): error TS2339: Property 'ui-nav-menu' does not exist on type 'JSX.IntrinsicElements'.
+src/components/Navigation.tsx(24,7): error TS2717: Subsequent property declarations must have the same type.  Property ''ui-nav-menu'' must be of type 'DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement>', but here has type 'any'.
