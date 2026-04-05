@@ -1,7 +1,7 @@
-// app/api/auth/callback/route.ts
-import { NextResponse } from 'next/server';
-import { shopify } from '@/lib/shopify';
-import { saveSession } from '@/lib/simple-session';
+import { NextResponse } from "next/server";
+import { shopify } from "@/lib/shopify";
+import { connectDB } from "@/lib/db";
+import { Shop } from "@/models/Shop";
 
 export async function GET(request: Request) {
   try {
@@ -9,38 +9,27 @@ export async function GET(request: Request) {
     const shop = url.searchParams.get("shop");
     const host = url.searchParams.get("host");
 
-    console.log("=== OAuth Callback Started ===");
-    console.log("Shop:", shop);
-    console.log("Host:", host);
-
     if (!shop || !host) {
-      return NextResponse.json({ error: "Missing shop or host" }, { status: 400 });
+      return NextResponse.json({ error: "Missing params" }, { status: 400 });
     }
 
-    // Complete OAuth
-    const callbackResponse = await shopify.auth.callback({
+    const { session } = await shopify.auth.callback({
       rawRequest: request,
     });
 
-    const { session } = callbackResponse;
+    await connectDB();
 
-    console.log("Session received - Has access token:", !!session.accessToken);
-
-    // Save session to our simple store
-    await saveSession(shop, session);
-
-    console.log("Session saved successfully");
-
-    // Redirect back to app with shop and host parameters
-    const redirectUrl = new URL(`/?shop=${shop}&host=${host}`, url.origin);
-    const response = NextResponse.redirect(redirectUrl);
-
-    return response;
-  } catch (err: any) {
-    console.error("OAuth callback failed:", err);
-    return NextResponse.json(
-      { error: "OAuth callback failed", details: err.message },
-      { status: 500 }
+    await Shop.findOneAndUpdate(
+      { shop },
+      { shop, accessToken: session.accessToken },
+      { upsert: true }
     );
+
+    const redirectUrl = `/?shop=${shop}&host=${host}`;
+
+    return NextResponse.redirect(new URL(redirectUrl, url.origin));
+  } catch (err: any) {
+    console.error(err);
+    return NextResponse.json({ error: "OAuth failed" }, { status: 500 });
   }
 }
