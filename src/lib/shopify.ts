@@ -1,14 +1,12 @@
 // lib/shopify.ts
 import "@shopify/shopify-api/adapters/web-api";
 import { shopifyApi, ApiVersion, LogSeverity } from "@shopify/shopify-api";
-import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
 
 const getHostName = () => {
   const appUrl = process.env.SHOPIFY_APP_URL || "http://localhost:3000";
   return appUrl.replace(/https?:\/\//, "").replace(/\/$/, "");
 };
 
-// Validate environment variables
 if (!process.env.NEXT_PUBLIC_SHOPIFY_API_KEY) {
   throw new Error("Missing NEXT_PUBLIC_SHOPIFY_API_KEY");
 }
@@ -33,4 +31,4 @@ export const shopify = shopifyApi({
   },
 });
 
-export const sessionStorage = new MemorySessionStorage();
+// We'll handle session storage via cookies instead

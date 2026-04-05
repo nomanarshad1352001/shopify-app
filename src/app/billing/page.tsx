@@ -14,7 +14,7 @@ export default function Billing() {
               </Text>
               <Text as="p">
                 This area will later be integrated with Heymantle or Shopify Billing API
-                to manage your app's subscriptions and charges.
+                to manage your app&#39;s subscriptions and charges.
               </Text>
             </BlockStack>
           </Card>
