@@ -3,8 +3,22 @@ import { shopify, sessionStorage } from '@/lib/shopify';
 
 export async function GET(request: Request) {
   try {
+    // Vercel serverless functions often receive `request.url` with 'http' internally. 
+    // Shopify strictly validates that the callback happens over 'https:`.
+    const url = new URL(request.url);
+    url.protocol = 'https:';
+    
+    // We clone the request and override its URL
+    const secureRequest = new Request(url.toString(), {
+      method: request.method,
+      headers: request.headers,
+      body: request.body,
+      // @ts-ignore - Duplex is required for Node.js 18+ streams if body exists
+      duplex: 'half'
+    });
+
     const callbackResponse = await shopify.auth.callback({
-      rawRequest: request,
+      rawRequest: secureRequest,
     });
 
     const { session, headers } = callbackResponse;
@@ -32,7 +46,7 @@ export async function GET(request: Request) {
 
     return response;
   } catch (err: any) {
-    console.error('Failed to complete OAuth callback', err);
-    return NextResponse.json({ error: 'OAuth callback failed' }, { status: 500 });
+    console.error('Failed to complete OAuth callback', err.message, err.stack, err);
+    return NextResponse.json({ error: 'OAuth callback failed', details: err.message }, { status: 500 });
   }
 }

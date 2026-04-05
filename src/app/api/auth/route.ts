@@ -15,13 +15,23 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Force https protocol for Vercel
+    const reqUrl = new URL(request.url);
+    reqUrl.protocol = 'https:';
+    const secureRequest = new Request(reqUrl.toString(), {
+      method: request.method,
+      headers: request.headers,
+      body: request.body,
+      // @ts-ignore
+      duplex: 'half'
+    });
+
     // Begin OAuth. isOnline determines if we get an online or offline token.
-    // For an embedded app, we usually do online for user actions, but let's do offline for MVP setup.
     const response = await shopify.auth.begin({
       shop: sanitizedShop,
       callbackPath: '/api/auth/callback',
       isOnline: false, // offline tokens are good for background jobs / MVP
-      rawRequest: request,
+      rawRequest: secureRequest,
     });
     
     // The web-api adapter returns a standard Response object which is what Next expects.
