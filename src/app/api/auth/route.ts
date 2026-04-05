@@ -1,3 +1,4 @@
+// app/api/auth/route.ts
 import { NextResponse } from "next/server"
 import { shopify } from "@/lib/shopify"
 
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Don't modify the request protocol - let Vercel handle it
+    // Use the raw request directly - don't modify it
     // The response from shopify.auth.begin includes the redirect and cookies
     return await shopify.auth.begin({
       shop: sanitizedShop,
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
       isOnline: false,
       rawRequest: request,
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("OAuth begin failed:", err);
     return NextResponse.json({ error: "OAuth initialization failed" }, { status: 500 });
   }

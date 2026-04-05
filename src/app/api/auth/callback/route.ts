@@ -1,14 +1,25 @@
+// app/api/auth/callback/route.ts
 import { NextResponse } from "next/server";
 import { shopify, sessionStorage } from "@/lib/shopify";
 
 export async function GET(request: Request) {
   try {
+    // Get the URL parameters
     const url = new URL(request.url);
+    const shop = url.searchParams.get("shop");
+    const host = url.searchParams.get("host");
+    const code = url.searchParams.get("code");
 
-    // CRITICAL: Don't modify the URL protocol or create a new Request
-    // The Shopify SDK needs the original request with original cookies
+    console.log("Callback received:", { shop, host, hasCode: !!code });
+
+    if (!shop || !host) {
+      console.error("Missing shop or host");
+      return NextResponse.json({ error: "Missing shop or host" }, { status: 400 });
+    }
+
+    // Complete the OAuth callback
     const callbackResponse = await shopify.auth.callback({
-      rawRequest: request, // Use original request, don't recreate it
+      rawRequest: request,
     });
 
     const { session, headers } = callbackResponse;
@@ -16,16 +27,13 @@ export async function GET(request: Request) {
     // Store the session
     await sessionStorage.storeSession(session);
 
-    const host = url.searchParams.get("host");
-    if (!host) {
-      return NextResponse.json({ error: "Missing host parameter" }, { status: 400 });
-    }
+    console.log("Session stored for shop:", session.shop);
 
     // Redirect to the embedded app
-    const appUrl = new URL(`/?shop=${session.shop}&host=${host}`, url.origin);
-    const response = NextResponse.redirect(appUrl);
+    const redirectUrl = new URL(`/?shop=${session.shop}&host=${host}`, url.origin);
+    const response = NextResponse.redirect(redirectUrl);
 
-    // Forward all cookies from Shopify SDK response
+    // Forward all cookies from the Shopify SDK
     if (headers) {
       for (const [key, value] of Object.entries(headers)) {
         if (typeof value === "string") {
@@ -38,15 +46,9 @@ export async function GET(request: Request) {
 
     return response;
   } catch (err: any) {
-    console.error("OAuth callback failed:", {
-      message: err.message,
-      stack: err.stack,
-    });
+    console.error("OAuth callback failed:", err);
     return NextResponse.json(
-      {
-        error: "OAuth callback failed",
-        details: err.message,
-      },
+      { error: "OAuth callback failed", details: err.message },
       { status: 500 }
     );
   }
