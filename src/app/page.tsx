@@ -13,20 +13,6 @@ import {
   Spinner
 } from '@shopify/polaris';
 
-// For App Bridge v4, you use the global window.shopify object
-// No imports needed from @shopify/app-bridge-react
-
-declare global {
-  interface Window {
-    shopify: {
-      toast: {
-        show: (message: string, options?: { duration?: number; isError?: boolean }) => void;
-      };
-      config: () => { apiKey: string; shopOrigin: string; host: string };
-    };
-  }
-}
-
 export default function Home() {
   const [isValidating, setIsValidating] = useState(true);
   const [sessionValid, setSessionValid] = useState(false);
@@ -61,7 +47,6 @@ export default function Home() {
   }, []);
 
   const showToast = (message: string, isError: boolean = false) => {
-    // App Bridge v4 uses the global shopify object
     if (typeof window !== 'undefined' && window.shopify?.toast) {
       window.shopify.toast.show(message, { duration: 3000, isError });
     } else {

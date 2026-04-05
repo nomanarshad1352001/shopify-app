@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@shopify/polaris/build/esm/styles.css";
 import "./globals.css";
 import { Providers } from "./providers";
-import { Navigation } from "@/components/Navigation";
+import Navigation from "@/components/Navigation";
 import Script from "next/script";
 import React from "react";
 
