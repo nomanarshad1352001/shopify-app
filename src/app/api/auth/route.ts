@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { shopify } from '@/lib/shopify';
+import { NextResponse } from "next/server"
+import { shopify } from "@/lib/shopify"
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -15,29 +15,24 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Force https protocol for Vercel
+    // Force https for Vercel
     const reqUrl = new URL(request.url);
     reqUrl.protocol = 'https:';
     const secureRequest = new Request(reqUrl.toString(), {
       method: request.method,
       headers: request.headers,
       body: request.body,
-      // @ts-ignore
-      duplex: 'half'
+      duplex: 'half',
     });
 
-    // Begin OAuth. isOnline determines if we get an online or offline token.
-    const response = await shopify.auth.begin({
+    return await shopify.auth.begin({
       shop: sanitizedShop,
       callbackPath: '/api/auth/callback',
-      isOnline: false, // offline tokens are good for background jobs / MVP
+      isOnline: false,
       rawRequest: secureRequest,
     });
-    
-    // The web-api adapter returns a standard Response object which is what Next expects.
-    return response;
   } catch (err: any) {
-    console.error('Failed to begin OAuth', err);
+    console.error('OAuth begin failed:', err);
     return NextResponse.json({ error: 'OAuth initialization failed' }, { status: 500 });
   }
 }
